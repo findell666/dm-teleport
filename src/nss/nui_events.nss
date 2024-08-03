@@ -46,12 +46,12 @@ void main() {
         else if(GetStringLeft(sElement, 3) == "tp_"){
             string sLocationIndex = GetSubString(sElement, 3, GetStringLength(sElement) - 1);
             int nLocationIndex = StringToInt(sLocationIndex);
-            GoToDMLocation(oPlayer, nLocationIndex);
+            GoToDMLocation(oPlayer, nLocationIndex, nToken);
             ResetEncourageBinds(oPlayer, nToken);
             NuiSetBind(oPlayer, nToken, "encourage_tp_"+sLocationIndex, JsonBool(TRUE));
         }
         else if (sElement == "dm_tp_mgr_back"){
-            GoBackToPreviousLocation(oPlayer);
+            GoBackToPreviousLocation(oPlayer, nToken);
             SendMessageToPC(oPlayer, "Go back to previous location");
         }
         else if (sElement == "dm_teleport_mgr_info"){

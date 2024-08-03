@@ -115,7 +115,7 @@ void SaveGoBackLocation(object oDM, int nToken, location prevLoc){
     SetLocalJson(oDM, "dm_tp_mgr_prevLocation", jObject);
 }
 
-void DoJump(object oDM, json jObject){
+void DoJump(object oDM, json jObject, int nToken){
     string areaTag = JsonGetString(JsonObjectGet(jObject, "areaTag"));
     vector position = JsonGetVector(JsonObjectGet(jObject, "position"));
     float facing = JsonGetFloat(JsonObjectGet(jObject, "facing"));
@@ -125,19 +125,22 @@ void DoJump(object oDM, json jObject){
         return;
     }
     location loc = Location(area, position, facing);
+
+    SaveGoBackLocation(oDM, nToken, GetLocation(oDM));
+
     AssignCommand(oDM, ClearAllActions());
     AssignCommand(oDM, ActionJumpToLocation(loc));    
 }
 
-void GoBackToPreviousLocation(object oDM){
+void GoBackToPreviousLocation(object oDM, int nToken){
     json jObject = GetLocalJson(oDM, "dm_tp_mgr_prevLocation");
-    DoJump(oDM, jObject);
+    DoJump(oDM, jObject, nToken);
 }
 
-void GoToDMLocation(object oDM, int nLocationIndex){
+void GoToDMLocation(object oDM, int nLocationIndex, int nToken){
     json jLocations = GetLocalJson(oDM, "dm_tp_mgr_locations");
     json jObject = JsonArrayGet(jLocations, nLocationIndex);
-    DoJump(oDM, jObject);
+    DoJump(oDM, jObject, nToken);
 }
 
 void RefreshContainer(object oDM, int nToken){
@@ -184,9 +187,9 @@ void PopDMTeleportManager(object oDM){
 
     // --- footer
     json jFooter = JsonArray();
-    json jButtonBack = NuiId(NuiButton (JsonString("Prev location")), "dm_tp_mgr_back");
+    json jButtonBack = NuiId(NuiButton (JsonString("Prev jump location")), "dm_tp_mgr_back");
     jButtonBack = NuiTooltip (jButtonBack, NuiBind("dm_tp_mgr_back_tooltip"));
-    jButtonBack = NuiWidth(jButtonBack, 120.0f);
+    jButtonBack = NuiWidth(jButtonBack, 140.0f);
     jButtonBack = NuiHeight(jButtonBack, 30.0f);
     jFooter = JsonArrayInsert(jFooter, jButtonBack);
 
