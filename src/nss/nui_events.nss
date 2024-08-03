@@ -18,11 +18,22 @@ void main() {
     string sWindowId = NuiGetWindowId(oPlayer, nToken);
 
     if (sWindowId == DM_TELEPORT_MGR_WINDOW){
+
+        if(sEvent == "open"){
+            SetLocalInt(oPlayer, "nToken", nToken);
+        }
+        
         if (sEvent != "mouseup"){
             return;
         }
         if (sElement == "dm_tp_mgr_bind_current"){
-            SendMessageToPC(oPlayer, "Bind current location");
+            SendMessageToPC(oPlayer, "Add current location");
+
+            if(GetDMLocationCount(oPlayer) >= MAX_NB_LOCATIONS){
+                SendMessageToPC(oPlayer, "You have reached the maximum number of locations (" + IntToString(MAX_NB_LOCATIONS)+")");
+                return;
+            }
+
             AddDMLocation(oPlayer);
             RefreshContainer(oPlayer, nToken);
         }
@@ -40,6 +51,7 @@ void main() {
             NuiSetBind(oPlayer, nToken, "encourage_tp_"+sLocationIndex, JsonBool(TRUE));
         }
         else if (sElement == "dm_tp_mgr_back"){
+            GoBackToPreviousLocation(oPlayer);
             SendMessageToPC(oPlayer, "Go back to previous location");
         }
         else if (sElement == "dm_teleport_mgr_info"){

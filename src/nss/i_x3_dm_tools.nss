@@ -1,93 +1,15 @@
 #include "nw_inc_nui"
 #include "nw_inc_nui_insp"
 #include "x0_i0_position" 
+#include "nui_windows"
 
 
-const int LAYOUT_HORIZONTAL = 1;
-const int LAYOUT_VERTICAL = 2;
+const int MAX_NB_LOCATIONS = 20;
 
 const string DM_TELEPORT_MGR_WINDOW = "dm-teleport-manager";
 
 json CreateLocationButton(string buttonName = "<empty>", int id = 0);
 json BindCurrentLocationButton(object oDM, json jContainer);
-
-// return the middle of the screen for the x position.
-// oPC using the menu.
-// fMenuWidth - the width of the menu to display.
-float GetGUIWidthMiddle (object oPC, float fMenuWidth){
-    // Get players window information.
-    float fGUI_Width = IntToFloat (GetPlayerDeviceProperty (oPC, PLAYER_DEVICE_PROPERTY_GUI_WIDTH));
-    float fGUI_Scale = IntToFloat (GetPlayerDeviceProperty (oPC, PLAYER_DEVICE_PROPERTY_GUI_SCALE)) / 100.0;
-    fMenuWidth = fMenuWidth * fGUI_Scale;
-    return (fGUI_Width / 2.0) - (fMenuWidth / 2.0);
-}
-
-// return the middle of the screen for the y position.
-// oPC using the menu.
-// fMenuHeight - the height of the menu to display.
-float GetGUIHeightMiddle (object oPC, float fMenuHeight){
-    // Get players window information.
-    float fGUI_Height = IntToFloat (GetPlayerDeviceProperty (oPC, PLAYER_DEVICE_PROPERTY_GUI_HEIGHT));
-    float fGUI_Scale = IntToFloat (GetPlayerDeviceProperty (oPC, PLAYER_DEVICE_PROPERTY_GUI_SCALE)) / 100.0;
-    fMenuHeight = fMenuHeight * fGUI_Scale;
-    return (fGUI_Height / 2.0) - (fMenuHeight / 2.0);
-}
-
-// oPC is the PC using the menu.
-// jLayout is the Layout of the menu.
-// sWinID is the string ID for this window.
-// slabel is the label of the menu.
-// fX is the X position of the menu. if (-1.0) then it will center the x postion
-// fY is the Y position of the menu. if (-1.0) then it will center the y postion
-// fWidth is the width of the menu.
-// fHeight is the height of the menu.
-// bResize - TRUE will all it to be resized.
-// bCollapse - TRUE will allow the window to be collapsable.
-// bClose - TRUE will allow the window to be closed.
-// bTransparent - TRUE makes the menu transparent.
-// bBorder - TRUE makes the menu have a border.
-// To remove the Title bar set sLabel to "FALSE" and bCollapse, bClose to FALSE.
-int SetWindow (object oPC, json jLayout, string sWinID, string sLabel, float fX, float fY, float fWidth, float fHeight, int bResize, int bCollapse, int bClose, int bTransparent, int bBorder){
-    // Create the window binding everything.
-    json jWindow;
-    if (sLabel == "FALSE"){
-        jWindow = NuiWindow (jLayout, JsonBool (FALSE), NuiBind ("window_geometry"),
-        NuiBind ("window_resizable"), JsonBool (FALSE), JsonBool (FALSE),
-        NuiBind ("window_transparent"), NuiBind ("window_border"));
-    }
-    else{
-        jWindow = NuiWindow (jLayout, NuiBind ("window_label"), NuiBind ("window_geometry"),
-        NuiBind ("window_resizable"), JsonBool (bCollapse), NuiBind ("window_closable"),
-        NuiBind ("window_transparent"), NuiBind ("window_border"));
-    }
-    // Create the window.
-    int nToken = NuiCreate (oPC, jWindow, sWinID);
-    if (fX == -1.0) fX = GetGUIWidthMiddle (oPC, fWidth);
-    if (fY == -1.0) fY = GetGUIHeightMiddle (oPC, fHeight);
-    NuiSetBind (oPC, nToken, "window_geometry", NuiRect (fX, fY, fWidth, fHeight));
-    // Set the binds for the new window.
-    // Set the window options.
-    if (sLabel != "FALSE"){
-        NuiSetBind (oPC, nToken, "window_label", JsonString (sLabel));
-        NuiSetBind (oPC, nToken, "window_closable", JsonBool (bClose));
-    }
-    NuiSetBind (oPC, nToken, "window_resizable", JsonBool (bResize));
-    NuiSetBind (oPC, nToken, "window_transparent", JsonBool (bTransparent));
-    NuiSetBind (oPC, nToken, "window_border", JsonBool (bBorder));
-    return nToken;
-}
-
-string GetElement(int i){
-    switch(i){
-        case 0: return "FIRE";
-        case 1: return "EARTH";
-        case 2: return "WATER";
-        case 3: return "AIR";
-        case 4: return "X";
-        default:return "X";
-    }
-    return "X";
-}
 
 json GetNUIColorWithName(string name){
     if("red" == name){
@@ -107,7 +29,6 @@ json CreateLocationButton(string buttonName = "<empty>", int id = 0){
     string sIdButton = "tp_"+IntToString(id);
     json jButton = NuiId(NuiButton(JsonString(buttonName)), sIdButton);
     jButton = NuiTooltip (jButton, JsonString(buttonName));
-    // jButton = NuiStyleForegroundColor(jButton, NuiBind("button_color_"+sIdButton));
     jButton = NuiEncouraged(jButton, NuiBind("encourage_"+sIdButton));
     jButton = NuiWidth (jButton, 120.0f);
     jButton = NuiHeight (jButton, 30.0f);
@@ -119,7 +40,6 @@ json CreateDeleteLocationButton(int id = 0){
     json jButton = NuiId(NuiButton(JsonString("x")), sIdButton);
     jButton = NuiStyleForegroundColor(jButton, GetNUIColorWithName("red"));
     jButton = NuiTooltip (jButton, JsonString("Remove location"));
-    // jButton = NuiEncouraged(jButton, NuiBind("encourage_"+sIdButton));
     jButton = NuiWidth (jButton, 30.0f);
     jButton = NuiHeight (jButton, 30.0f);
     return jButton;
@@ -140,17 +60,25 @@ vector JsonGetVector(json jVector){
     return Vector(x, y, z);
 }
 
+int GetDMLocationCount(object oDM){
+    json jLocations = GetLocalJson(oDM, "dm_tp_mgr_locations");
+    if(jLocations == JsonNull()){
+        return 0;
+    }
+    return JsonGetLength(jLocations);
+}
+
 //add current location to json array
 void AddDMLocation(object oDM){
     json jLocations = GetLocalJson(oDM, "dm_tp_mgr_locations");
     if(jLocations == JsonNull()){
         jLocations = JsonArray();
     }
-    object area = GetArea(oDM);
-    string name = GetName(area);
+    object oArea = GetArea(oDM);
+    string name = GetName(oArea);
     json jObject = JsonObject();
     location loc = GetLocation(oDM);
-    string areaTag = GetTag(area);
+    string areaTag = GetTag(oArea);
     vector position = GetPositionFromLocation(loc);
     float facing = GetFacingFromLocation(loc);
 
@@ -169,9 +97,25 @@ void DeleteDMLocation(object oDM, int nLocationIndex){
     SetLocalJson(oDM, "dm_tp_mgr_locations", jLocations);
 }
 
-void GoToDMLocation(object oDM, int nLocationIndex){
-    json jLocations = GetLocalJson(oDM, "dm_tp_mgr_locations");
-    json jObject = JsonArrayGet(jLocations, nLocationIndex);
+void SaveGoBackLocation(object oDM, int nToken, location prevLoc){
+
+    object oArea = GetAreaFromLocation(prevLoc);
+    string areaTag = GetTag(oArea);
+    string name = GetName(oArea);
+    vector position = GetPositionFromLocation(prevLoc);
+    float facing = GetFacingFromLocation(prevLoc);
+
+    json jObject = JsonObject();
+    jObject = JsonObjectSet(jObject, "areaTag", JsonString(areaTag));
+    jObject = JsonObjectSet(jObject, "name", JsonString(name));
+    jObject = JsonObjectSet(jObject, "position", JsonVector(position));
+    jObject = JsonObjectSet(jObject, "facing", JsonFloat(facing));
+
+    NuiSetBind(oDM, nToken, "dm_tp_mgr_back_tooltip", JsonString(name));
+    SetLocalJson(oDM, "dm_tp_mgr_prevLocation", jObject);
+}
+
+void DoJump(object oDM, json jObject){
     string areaTag = JsonGetString(JsonObjectGet(jObject, "areaTag"));
     vector position = JsonGetVector(JsonObjectGet(jObject, "position"));
     float facing = JsonGetFloat(JsonObjectGet(jObject, "facing"));
@@ -182,7 +126,18 @@ void GoToDMLocation(object oDM, int nLocationIndex){
     }
     location loc = Location(area, position, facing);
     AssignCommand(oDM, ClearAllActions());
-    AssignCommand(oDM, ActionJumpToLocation(loc));
+    AssignCommand(oDM, ActionJumpToLocation(loc));    
+}
+
+void GoBackToPreviousLocation(object oDM){
+    json jObject = GetLocalJson(oDM, "dm_tp_mgr_prevLocation");
+    DoJump(oDM, jObject);
+}
+
+void GoToDMLocation(object oDM, int nLocationIndex){
+    json jLocations = GetLocalJson(oDM, "dm_tp_mgr_locations");
+    json jObject = JsonArrayGet(jLocations, nLocationIndex);
+    DoJump(oDM, jObject);
 }
 
 void RefreshContainer(object oDM, int nToken){
@@ -230,7 +185,7 @@ void PopDMTeleportManager(object oDM){
     // --- footer
     json jFooter = JsonArray();
     json jButtonBack = NuiId(NuiButton (JsonString("Prev location")), "dm_tp_mgr_back");
-    jButtonBack = NuiTooltip (jButtonBack, JsonString("Go back to previous location"));
+    jButtonBack = NuiTooltip (jButtonBack, NuiBind("dm_tp_mgr_back_tooltip"));
     jButtonBack = NuiWidth(jButtonBack, 120.0f);
     jButtonBack = NuiHeight(jButtonBack, 30.0f);
     jFooter = JsonArrayInsert(jFooter, jButtonBack);
