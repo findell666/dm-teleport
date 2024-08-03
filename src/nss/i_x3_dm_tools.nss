@@ -7,6 +7,7 @@
 const int MAX_NB_LOCATIONS = 20;
 
 const string DM_TELEPORT_MGR_WINDOW = "dm-teleport-manager";
+const string DM_PLACEABLE_MGR_WINDOW = "dm-placeable-manager";
 
 json CreateLocationButton(string buttonName = "<empty>", int id = 0);
 json BindCurrentLocationButton(object oDM, json jContainer);
@@ -209,4 +210,103 @@ void PopDMTeleportManager(object oDM){
     json jLayoutGlobal = NuiCol (jColGlobal);
     int nToken = SetWindow(oDM, jLayoutGlobal, DM_TELEPORT_MGR_WINDOW, "DM Teleport Manager", -1.0f, -1.0f, fWidth, fHeight, TRUE, TRUE, TRUE, TRUE, TRUE);
     RefreshContainer(oDM, nToken);
+}
+
+/*--------------------------------- DM Placeable Manager ---------------------------------*/
+
+json ListPlaceables(object oDM){
+    object oArea = GetArea(oDM);
+    json jPlaceables = JsonArray();
+    object pl = GetFirstObjectInArea(oArea);
+    while(GetIsObjectValid(pl)){
+        if(GetObjectType(pl) == OBJECT_TYPE_PLACEABLE){
+            string sTag = GetTag(pl);
+            string sName = GetName(pl);
+            json jPlaceable = JsonObject();
+            jPlaceable = JsonObjectSet(jPlaceable, "tag", JsonString(sTag));
+            jPlaceable = JsonObjectSet(jPlaceable, "name", JsonString(sName));
+            jPlaceable = JsonObjectSet(jPlaceable, "ref", JsonString(ObjectToString(pl)));
+            jPlaceables = JsonArrayInsert(jPlaceables, jPlaceable);
+        }
+
+        pl = GetNextObjectInArea(oArea);
+    }
+    return jPlaceables;
+}
+
+json CreateDeletePlaceableButton(int id = 0){
+    string sIdButton = "pl_delete_"+IntToString(id);
+    json jButton = NuiId(NuiButton(JsonString("x")), sIdButton);
+    jButton = NuiStyleForegroundColor(jButton, GetNUIColorWithName("red"));
+    jButton = NuiTooltip (jButton, JsonString("Remove placeable"));
+    jButton = NuiWidth (jButton, 20.0f);
+    jButton = NuiHeight (jButton, 20.0f);
+    return jButton;
+}
+
+json CreatePlaceableButton(string buttonName = "<empty>", int id = 0){
+    string sIdButton = "pl_"+IntToString(id);
+    json jButton = NuiId(NuiButton(JsonString(buttonName)), sIdButton);
+    jButton = NuiTooltip (jButton, JsonString(buttonName));
+    jButton = NuiWidth (jButton, 240.0f);
+    jButton = NuiHeight (jButton, 20.0f);
+    return jButton;
+}
+
+void RefreshPlaceableContainer(object oDM, int nToken){
+    json jPlaceables = ListPlaceables(GetArea(oDM));
+    json jCol = JsonArray();
+    int i =0;
+    for(i = 0; i < JsonGetLength(jPlaceables); i++){
+        json jLine = JsonArray();
+        json jObject = JsonArrayGet(jPlaceables, i);
+        string name = JsonGetString(JsonObjectGet(jObject, "name"));
+        string tag = JsonGetString(JsonObjectGet(jObject, "tag"));
+        json tpButton = CreatePlaceableButton(name + " - " + tag, i);
+        jLine = JsonArrayInsert(jLine, tpButton);
+        jLine = JsonArrayInsert(jLine, CreateDeletePlaceableButton(i));
+        jLine = NuiRow(jLine);
+        jCol = JsonArrayInsert(jCol, jLine);
+    }
+    jCol = NuiCol(jCol);
+    NuiSetGroupLayout(oDM, nToken, "dm_placeable_mgr_container", jCol);
+}
+
+void GoToPlaceable(object oDM, int nLocationIndex, int nToken){
+    json jPlaceables = ListPlaceables(GetArea(oDM));
+    json jObject = JsonArrayGet(jPlaceables, nLocationIndex);
+    object oPlaceable = StringToObject(JsonGetString(JsonObjectGet(jObject, "ref")));
+    if(GetIsObjectValid(oPlaceable)){
+        AssignCommand(oDM, ClearAllActions());
+        AssignCommand(oDM, ActionJumpToObject(oPlaceable));
+    }
+}
+
+void DeletePlaceable(object oDM, int nLocationIndex){
+    json jPlaceables = ListPlaceables(GetArea(oDM));
+    json jObject = JsonArrayGet(jPlaceables, nLocationIndex);
+    object oPlaceable = StringToObject(JsonGetString(JsonObjectGet(jObject, "ref")));
+    if(GetIsObjectValid(oPlaceable)){
+        DestroyObject(oPlaceable);
+        jPlaceables = JsonArrayDel(jPlaceables, nLocationIndex);
+    }
+}
+
+void PopDMPlaceableManager(object oDM){
+    float fWidth = 320.0f;
+    float fHeight = 400.0f;
+    
+    // --- container
+    json jContainer = JsonArray();
+    jContainer = NuiRow(jContainer);
+    jContainer = NuiGroup(jContainer, TRUE, NUI_SCROLLBARS_AUTO);
+    jContainer = NuiWidth(jContainer, 290.0f);
+    jContainer = NuiId(jContainer, "dm_placeable_mgr_container");
+    
+
+    json jColGlobal = JsonArray();
+    jColGlobal = JsonArrayInsert(jColGlobal, jContainer);
+    json jLayoutGlobal = NuiCol (jColGlobal);
+    int nToken = SetWindow(oDM, jLayoutGlobal, DM_PLACEABLE_MGR_WINDOW, "DM Placeable Manager", -1.0f, -1.0f, fWidth, fHeight, TRUE, TRUE, TRUE, TRUE, TRUE);
+    RefreshPlaceableContainer(oDM, nToken);
 }

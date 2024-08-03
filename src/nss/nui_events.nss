@@ -58,4 +58,24 @@ void main() {
             SendMessageToPC(oPlayer, "Help");
         }
     }
+
+    if (sWindowId == DM_PLACEABLE_MGR_WINDOW){
+
+        if (sEvent != "mouseup"){
+            return;
+        }
+
+        if(GetStringLeft(sElement, 10) == "pl_delete_"){
+            string sPlaceableIndex = GetSubString(sElement, 10, GetStringLength(sElement) - 1);
+            int nPlaceableIndex = StringToInt(sPlaceableIndex);
+            DeletePlaceable(oPlayer, nPlaceableIndex);
+            DelayCommand(1.0f, RefreshPlaceableContainer(oPlayer, nToken));
+        }
+        else if(GetStringLeft(sElement, 3) == "pl_"){
+            string sPlaceableIndex = GetSubString(sElement, 3, GetStringLength(sElement) - 1);
+            int nPlaceableIndex = StringToInt(sPlaceableIndex);
+            GoToPlaceable(oPlayer, nPlaceableIndex, nToken);
+        }
+
+    }
 }

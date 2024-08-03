@@ -9,6 +9,9 @@
 void main()
 {
     object oUser = OBJECT_SELF;    
-    SendMessageToPC(oUser, "DM Tool 2");
-    SendMessageToPC(oUser, GetName(oUser));
+
+    if(GetIsDM(oUser)){
+        SendMessageToPC(oUser, "DM Teleport manager opened");
+        PopDMPlaceableManager(oUser);
+    }
 }
