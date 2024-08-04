@@ -434,6 +434,7 @@ void RefreshQuestContainer(object oDM, int nToken, int nQuestIndex){
 // log quest string just in case with comment etc
 //search in journal not in journal
 //special quests display checkboxes for heads / singatres / etc
+//reward info, XP, item gomld what stage ?
 
 void PopDMQuestManager(object oDM, object oPlayer){
     float fWidth = 550.0f;
