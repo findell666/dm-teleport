@@ -2,12 +2,14 @@
 #include "nw_inc_nui_insp"
 #include "x0_i0_position" 
 #include "nui_windows"
+#include "i_quests"
 
 
 const int MAX_NB_LOCATIONS = 20;
 
 const string DM_TELEPORT_MGR_WINDOW = "dm-teleport-manager";
 const string DM_PLACEABLE_MGR_WINDOW = "dm-placeable-manager";
+const string DM_QUEST_MGR_WINDOW = "dm-quest-manager";
 
 json CreateLocationButton(string buttonName = "<empty>", int id = 0);
 json BindCurrentLocationButton(object oDM, json jContainer);
@@ -309,4 +311,176 @@ void PopDMPlaceableManager(object oDM){
     json jLayoutGlobal = NuiCol (jColGlobal);
     int nToken = SetWindow(oDM, jLayoutGlobal, DM_PLACEABLE_MGR_WINDOW, "DM Placeable Manager", -1.0f, -1.0f, fWidth, fHeight, TRUE, TRUE, TRUE, TRUE, TRUE);
     RefreshPlaceableContainer(oDM, nToken);
+}
+
+/*--------------------------------- DM Quest Manager ---------------------------------*/
+json GetQuestComboElements(){
+    json jQuestCombo = JsonArray();
+    json jQuestDefault = NuiComboEntry("Select a quest", 0);
+    jQuestCombo = JsonArrayInsert(jQuestCombo, jQuestDefault);
+
+    //add special quests
+
+    //add generic quests
+    int i = 1;
+    for(i=1; i<= MAX_QUESTS; i++){
+        string questName = GetQuestName(i);
+        json jQuest = NuiComboEntry(questName, i);
+        jQuestCombo = JsonArrayInsert(jQuestCombo, jQuest);
+    }
+    return jQuestCombo;
+}
+
+void RefreshQuestValue(object oDM, int nToken, int delta = 0){
+
+    json jQuestValue = NuiGetBind(oDM, nToken, "dm_quest_mgr_quest_value");
+    json jQuestValueMax = NuiGetBind(oDM, nToken, "dm_quest_mgr_quest_max");
+
+    int nQuestValue = JsonGetInt(jQuestValue);
+    int nQuestMax = JsonGetInt(jQuestValueMax);
+
+    if(delta != 0){
+        nQuestValue = nQuestValue + delta;
+    }
+
+    if(nQuestValue < 0){
+        nQuestValue = 0;
+    }
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_value", JsonInt(nQuestValue));
+
+    string sQuestMax = IntToString(nQuestMax);
+    if(-1 == nQuestMax){
+        sQuestMax = "?";
+    }
+    else{
+        if(nQuestValue > nQuestMax){
+            nQuestValue = nQuestMax;
+        }        
+    }
+
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_value_display", JsonString(IntToString(nQuestValue) + " / " + sQuestMax));
+}
+
+void RefreshQuestContainer(object oDM, int nToken, int nQuestIndex){
+    json jCol = JsonArray();
+
+    json jData = NuiGetUserData(oDM, nToken);
+    object oTarget = StringToObject(JsonGetString(jData));
+    if(!GetIsObjectValid(oTarget)){
+
+        json jLine = JsonArray();
+        json jLabelPlayerNotFound = NuiLabel(JsonString("Invalid player, try again"), JsonInt(NUI_HALIGN_CENTER), JsonInt(NUI_VALIGN_MIDDLE)); 
+        jLabelPlayerNotFound = NuiHeight(jLabelPlayerNotFound, 20.0f);
+        jLine = JsonArrayInsert(jLine, jLabelPlayerNotFound);
+        jCol = JsonArrayInsert(jCol, jLine);
+        jCol = NuiCol(jCol);
+        NuiSetGroupLayout(oDM, nToken, "dm_quest_mgr_container", jCol);
+        return;
+    }
+
+    string questName = GetQuestName(nQuestIndex);
+
+    // --- name
+    json jLine = JsonArray();
+    json jLabelQuestName = NuiLabel(JsonString("Edit quest : " + questName), JsonInt(NUI_HALIGN_CENTER), JsonInt(NUI_VALIGN_MIDDLE)); 
+    jLabelQuestName = NuiHeight(jLabelQuestName, 20.0f);
+    jLine = JsonArrayInsert(jLine, jLabelQuestName);
+    jLine = NuiRow(jLine);
+    jCol = JsonArrayInsert(jCol, jLine);
+
+    // --- description
+    json jLineDesc = JsonArray();
+
+    json jDescription =  NuiText(JsonString("The description of the quest here, with detailled steps"), FALSE, NUI_SCROLLBARS_AUTO);
+    jLineDesc = JsonArrayInsert(jLineDesc, jDescription);
+    jLineDesc = NuiRow(jLineDesc);
+    jCol = JsonArrayInsert(jCol, jLineDesc);
+
+    // ---  < | value / maxValue | >
+    json jLineValueEdit = JsonArray();
+
+    int nQuestValue = GetQuestInt(oTarget, nQuestIndex);
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_value", JsonInt(nQuestValue));
+        
+    int nQuestMax = QuestMaximum(oTarget, nQuestIndex);
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_max", JsonInt(nQuestMax));
+
+    string sQuestMax = IntToString(nQuestMax);
+
+    json jButtonMinus = NuiId(NuiButton(JsonString("<")), "dm_quest_mgr_minus_"+IntToString(nQuestIndex));
+    jButtonMinus = NuiTooltip(jButtonMinus, JsonString("Decrease quest value"));
+
+    json jLabelQuestValue = NuiLabel(NuiBind("dm_quest_mgr_quest_value_display"), JsonInt(NUI_HALIGN_CENTER), JsonInt(NUI_VALIGN_MIDDLE));
+    RefreshQuestValue(oDM, nToken);
+
+    json jButtonPlus = NuiId(NuiButton(JsonString(">")), "dm_quest_mgr_plus_"+IntToString(nQuestIndex));
+    jButtonPlus = NuiTooltip(jButtonPlus, JsonString("Increase quest value"));
+
+    jLineValueEdit = JsonArrayInsert(jLineValueEdit, jButtonMinus);
+    jLineValueEdit = JsonArrayInsert(jLineValueEdit, jLabelQuestValue);
+    jLineValueEdit = JsonArrayInsert(jLineValueEdit, jButtonPlus);
+    jLineValueEdit = NuiRow(jLineValueEdit);
+    jCol = JsonArrayInsert(jCol, jLineValueEdit);
+
+
+    jCol = NuiCol(jCol);
+    NuiSetGroupLayout(oDM, nToken, "dm_quest_mgr_container", jCol);
+}
+
+//set quest value
+//use recall orb
+
+void PopDMQuestManager(object oDM, object oPlayer){
+    float fWidth = 550.0f;
+    float fHeight = 400.0f;
+
+    // --- header
+    json jHeader = JsonArray();
+
+    string playerName = GetName(oPlayer);
+    int nLevel = GetHitDice(oPlayer);
+
+    string playerInfo = playerName + " - Level " + IntToString(nLevel);
+
+    json jLabelPlayerName = NuiLabel(JsonString(playerInfo), JsonInt(NUI_HALIGN_CENTER), JsonInt(NUI_VALIGN_MIDDLE)); 
+    jLabelPlayerName = NuiHeight(jLabelPlayerName, 20.0f);
+    jHeader = JsonArrayInsert(jHeader, jLabelPlayerName);
+
+
+    // --- quest selection
+    json jQuestSelection = JsonArray();
+    json jQuestElements = GetQuestComboElements();
+
+    json jQuestCombo = NuiCombo(jQuestElements, NuiBind("dm_quest_mgr_combo_value"));
+    jQuestCombo = NuiId(jQuestCombo, "dm_quest_mgr_combo");
+    jQuestCombo = NuiWidth(jQuestCombo, 200.0f);
+    
+
+    jQuestSelection = JsonArrayInsert(jQuestSelection, jQuestCombo);
+
+    // --- container
+    json jContainer = JsonArray();
+
+
+
+    // --- make NuiRows
+    jHeader = NuiRow(jHeader);
+    jQuestSelection = NuiRow(jQuestSelection);
+    jContainer = NuiRow(jContainer);
+
+
+    jContainer = NuiGroup(jContainer, TRUE, NUI_SCROLLBARS_AUTO);
+    jContainer = NuiId(jContainer, "dm_quest_mgr_container");
+    jContainer = NuiWidth(jContainer, 520.0f);
+
+    json jColGlobal = JsonArray();
+    jColGlobal = JsonArrayInsert(jColGlobal, jHeader);
+    jColGlobal = JsonArrayInsert(jColGlobal, jQuestSelection);
+    jColGlobal = JsonArrayInsert(jColGlobal, jContainer);
+
+    json jLayoutGlobal = NuiCol (jColGlobal);
+    int nToken = SetWindow(oDM, jLayoutGlobal, DM_QUEST_MGR_WINDOW, "DM Quest Manager", -1.0f, -1.0f, fWidth, fHeight, TRUE, TRUE, TRUE, FALSE, TRUE);
+
+    NuiSetBindWatch(oDM, nToken, "dm_quest_mgr_combo_value", TRUE);
+    NuiSetUserData(oDM, nToken, JsonString(ObjectToString(oPlayer)));
 }

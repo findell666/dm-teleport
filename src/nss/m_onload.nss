@@ -13,4 +13,5 @@ void main()
 
     SetTlkOverride(111674, "DM Teleport tool");
     SetTlkOverride(111675, "DM Placeable Mgr tool");
+    SetTlkOverride(111676, "DM Player Quest Mgr tool");
 }

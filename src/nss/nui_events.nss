@@ -57,6 +57,7 @@ void main() {
         else if (sElement == "dm_teleport_mgr_info"){
             SendMessageToPC(oPlayer, "Help");
         }
+        return;
     }
 
     if (sWindowId == DM_PLACEABLE_MGR_WINDOW){
@@ -75,6 +76,37 @@ void main() {
             string sPlaceableIndex = GetSubString(sElement, 3, GetStringLength(sElement) - 1);
             int nPlaceableIndex = StringToInt(sPlaceableIndex);
             GoToPlaceable(oPlayer, nPlaceableIndex, nToken);
+        }
+        return;
+    }
+
+    if (sWindowId == DM_QUEST_MGR_WINDOW){
+
+        if(sElement == "dm_quest_mgr_combo_value"  && sEvent == "watch"){
+
+            json jComboValue = NuiGetBind(oPlayer, nToken, "dm_quest_mgr_combo_value");
+            int nComboValue = JsonGetInt(jComboValue);
+
+            RefreshQuestContainer(oPlayer, nToken, nComboValue);
+            return;
+        }
+        
+        if (sEvent != "mouseup"){
+            return;
+        }
+
+        if(GetStringLeft(sElement, 19) == "dm_quest_mgr_minus_"){
+            // string sQuestIndex = GetSubString(sElement, 19, GetStringLength(sElement) - 1);
+            // int nQuestIndex = StringToInt(sQuestIndex);
+            RefreshQuestValue(oPlayer, nToken, -1);
+            return;
+        }
+
+        if(GetStringLeft(sElement, 18) == "dm_quest_mgr_plus_"){
+            // string sQuestIndex = GetSubString(sElement, 18, GetStringLength(sElement) - 1);
+            // int nQuestIndex = StringToInt(sQuestIndex);
+            RefreshQuestValue(oPlayer, nToken, 1);
+            return;
         }
 
     }
