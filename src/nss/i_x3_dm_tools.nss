@@ -11,6 +11,7 @@ const string DM_TELEPORT_MGR_WINDOW = "dm-teleport-manager";
 const string DM_PLACEABLE_MGR_WINDOW = "dm-placeable-manager";
 const string DM_QUEST_MGR_WINDOW = "dm-quest-manager";
 
+
 json CreateLocationButton(string buttonName = "<empty>", int id = 0);
 json BindCurrentLocationButton(object oDM, json jContainer);
 
@@ -319,8 +320,6 @@ json GetQuestComboElements(){
     json jQuestDefault = NuiComboEntry("Select a quest", 0);
     jQuestCombo = JsonArrayInsert(jQuestCombo, jQuestDefault);
 
-    //add special quests
-
     //add generic quests
     int i = 1;
     for(i=1; i<= MAX_QUESTS; i++){
@@ -328,6 +327,18 @@ json GetQuestComboElements(){
         json jQuest = NuiComboEntry(questName, i);
         jQuestCombo = JsonArrayInsert(jQuestCombo, jQuest);
     }
+
+    //add special quests
+    // QUEST_KILLQUEST
+    json jQuest = NuiComboEntry("Guard's assignment", MAX_QUESTS+1);
+    jQuestCombo = JsonArrayInsert(jQuestCombo, jQuest);
+
+    // QUEST_EXTENDQUEST
+    jQuest = NuiComboEntry("Elijah's tasks", MAX_QUESTS+2);
+    jQuestCombo = JsonArrayInsert(jQuestCombo, jQuest);
+
+    // Signatures
+
     return jQuestCombo;
 }
 
@@ -361,6 +372,16 @@ void RefreshQuestValue(object oDM, int nToken, int delta = 0){
     NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_value_display", JsonString(IntToString(nQuestValue) + " / " + sQuestMax));
 }
 
+int GetDigitValue(int nthDigit, int nValue){
+    string sValue = IntToString(nValue);
+    int nLength = GetStringLength(sValue);
+    if(nthDigit >= nLength){
+        return 0;
+    }
+    string sDigit = GetSubString(sValue, nthDigit, 1);
+    return StringToInt(sDigit);
+}
+
 void RefreshQuestContainer(object oDM, int nToken, int nQuestIndex){
     json jCol = JsonArray();
 
@@ -378,7 +399,22 @@ void RefreshQuestContainer(object oDM, int nToken, int nQuestIndex){
         return;
     }
 
+    //get quest data
     string questName = GetQuestName(nQuestIndex);
+    int nQuestValue = GetQuestInt(oTarget, nQuestIndex);
+    int nQuestMax = QuestMaximum(oTarget, nQuestIndex);
+    if(nQuestIndex > MAX_QUESTS){
+        if(nQuestIndex == MAX_QUESTS+1){
+            questName = "Guard's assignment";
+        }
+        else if(nQuestIndex == MAX_QUESTS+2){
+            questName = "Elijah's tasks";
+        }
+    }
+
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_name", JsonString(questName));
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_value", JsonInt(nQuestValue));
+    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_max", JsonInt(nQuestMax));
 
     // --- name
     json jLine = JsonArray();
@@ -388,40 +424,107 @@ void RefreshQuestContainer(object oDM, int nToken, int nQuestIndex){
     jLine = NuiRow(jLine);
     jCol = JsonArrayInsert(jCol, jLine);
 
-    // --- description
-    json jLineDesc = JsonArray();
 
-    json jDescription =  NuiText(JsonString("The description of the quest here, with detailled steps"), FALSE, NUI_SCROLLBARS_AUTO);
-    jLineDesc = JsonArrayInsert(jLineDesc, jDescription);
-    jLineDesc = NuiRow(jLineDesc);
-    jCol = JsonArrayInsert(jCol, jLineDesc);
+    // normal quest controls
+    if(nQuestIndex <= MAX_QUESTS){
 
-    // ---  < | value / maxValue | >
-    json jLineValueEdit = JsonArray();
+        // --- description
+        json jLineDesc = JsonArray();
+        json jDescription =  NuiText(JsonString("The description of the quest here, with detailled steps"), FALSE, NUI_SCROLLBARS_AUTO);
+        jLineDesc = JsonArrayInsert(jLineDesc, jDescription);
+        jLineDesc = NuiRow(jLineDesc);
+        jCol = JsonArrayInsert(jCol, jLineDesc);
 
-    int nQuestValue = GetQuestInt(oTarget, nQuestIndex);
-    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_value", JsonInt(nQuestValue));
-        
-    int nQuestMax = QuestMaximum(oTarget, nQuestIndex);
-    NuiSetBind(oDM, nToken, "dm_quest_mgr_quest_max", JsonInt(nQuestMax));
+        // ---  < | value / maxValue | >
+        json jLineValueEdit = JsonArray();
+        json jButtonMinus = NuiId(NuiButton(JsonString("<")), "dm_quest_mgr_minus_"+IntToString(nQuestIndex));
+        jButtonMinus = NuiTooltip(jButtonMinus, JsonString("Decrease quest value"));
 
-    string sQuestMax = IntToString(nQuestMax);
+        json jLabelQuestValue = NuiLabel(NuiBind("dm_quest_mgr_quest_value_display"), JsonInt(NUI_HALIGN_CENTER), JsonInt(NUI_VALIGN_MIDDLE));
+        RefreshQuestValue(oDM, nToken);
 
-    json jButtonMinus = NuiId(NuiButton(JsonString("<")), "dm_quest_mgr_minus_"+IntToString(nQuestIndex));
-    jButtonMinus = NuiTooltip(jButtonMinus, JsonString("Decrease quest value"));
+        json jButtonPlus = NuiId(NuiButton(JsonString(">")), "dm_quest_mgr_plus_"+IntToString(nQuestIndex));
+        jButtonPlus = NuiTooltip(jButtonPlus, JsonString("Increase quest value"));
 
-    json jLabelQuestValue = NuiLabel(NuiBind("dm_quest_mgr_quest_value_display"), JsonInt(NUI_HALIGN_CENTER), JsonInt(NUI_VALIGN_MIDDLE));
-    RefreshQuestValue(oDM, nToken);
+        jLineValueEdit = JsonArrayInsert(jLineValueEdit, jButtonMinus);
+        jLineValueEdit = JsonArrayInsert(jLineValueEdit, jLabelQuestValue);
+        jLineValueEdit = JsonArrayInsert(jLineValueEdit, jButtonPlus);
+        jLineValueEdit = NuiRow(jLineValueEdit);
+        jCol = JsonArrayInsert(jCol, jLineValueEdit);
+    }
 
-    json jButtonPlus = NuiId(NuiButton(JsonString(">")), "dm_quest_mgr_plus_"+IntToString(nQuestIndex));
-    jButtonPlus = NuiTooltip(jButtonPlus, JsonString("Increase quest value"));
+    //special quests controls
+    if(nQuestIndex == MAX_QUESTS+1){
 
-    jLineValueEdit = JsonArrayInsert(jLineValueEdit, jButtonMinus);
-    jLineValueEdit = JsonArrayInsert(jLineValueEdit, jLabelQuestValue);
-    jLineValueEdit = JsonArrayInsert(jLineValueEdit, jButtonPlus);
-    jLineValueEdit = NuiRow(jLineValueEdit);
-    jCol = JsonArrayInsert(jCol, jLineValueEdit);
+        int iKQStatus = GetLocalInt(oTarget, QUEST_KILLQUEST);
 
+        WriteTimestampedLogEntry("KQ status : " + IntToString(iKQStatus));
+
+        int banditBoss = GetDigitValue(1 ,iKQStatus);
+
+        WriteTimestampedLogEntry("Bandit boss : " + IntToString(banditBoss));
+        int goblinBoss = GetDigitValue(2 ,iKQStatus);
+        WriteTimestampedLogEntry("Goblin boss : " + IntToString(goblinBoss));
+        int sshtlaBoss = GetDigitValue(3 ,iKQStatus);
+        WriteTimestampedLogEntry("SShtla boss : " + IntToString(sshtlaBoss));
+        int orcCaptain = GetDigitValue(4 ,iKQStatus);
+        WriteTimestampedLogEntry("Orc captain : " + IntToString(orcCaptain));
+        int ibCaptain = GetDigitValue(5 ,iKQStatus);
+        WriteTimestampedLogEntry("IB captain : " + IntToString(ibCaptain));
+
+        json jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("Bandit boss's head"), JsonBool(banditBoss)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+        jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("Goblin chief's head"), JsonBool(goblinBoss)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+        jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("SSthla chied's head"), JsonBool(sshtlaBoss)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+        jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("Orc captain's head"), JsonBool(orcCaptain)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+        jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("IB Captain's head"), JsonBool(ibCaptain)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+    }
+
+    if(nQuestIndex == MAX_QUESTS+2){
+
+        int iKQStatus = GetLocalInt(oTarget, QUEST_EXTENDQUEST);
+
+        int orccomm = GetDigitValue(1 ,iKQStatus);
+        int bragg = GetDigitValue(2 ,iKQStatus);
+        int be = GetDigitValue(3 ,iKQStatus);
+
+        json jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("Orc commander's head"), JsonBool(orccomm)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+        jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("General Bragg's head"), JsonBool(bragg)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+        jLineSpecial = JsonArray();
+        jLineSpecial = JsonArrayInsert(jLineSpecial, NuiCheck(JsonString("Bleeding Eye Chief's head"), JsonBool(be)));
+        jLineSpecial = NuiRow(jLineSpecial);
+        jCol = JsonArrayInsert(jCol, jLineSpecial);
+
+    }
+
+    //-- buttons
 
     jCol = NuiCol(jCol);
     NuiSetGroupLayout(oDM, nToken, "dm_quest_mgr_container", jCol);
