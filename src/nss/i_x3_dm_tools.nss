@@ -427,8 +427,13 @@ void RefreshQuestContainer(object oDM, int nToken, int nQuestIndex){
     NuiSetGroupLayout(oDM, nToken, "dm_quest_mgr_container", jCol);
 }
 
-//set quest value
-//use recall orb
+//TODO
+//set quest value (savedb int etc), button reset / valider 
+//use recall orb automatically + Floatingstring on PC
+
+// log quest string just in case with comment etc
+//search in journal not in journal
+//special quests display checkboxes for heads / singatres / etc
 
 void PopDMQuestManager(object oDM, object oPlayer){
     float fWidth = 550.0f;
