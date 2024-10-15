@@ -10,7 +10,10 @@ const int MAX_NB_LOCATIONS = 20;
 const string DM_TELEPORT_MGR_WINDOW = "dm-teleport-manager";
 const string DM_PLACEABLE_MGR_WINDOW = "dm-placeable-manager";
 const string DM_QUEST_MGR_WINDOW = "dm-quest-manager";
+const string DM_VFX_MGR_WINDOW = "dm-vfx-manager";
 
+const int TARGET_MODE_VFX_APPLY = 4;
+const string NUI_DM_VFX_MGR_TOKEN = "nui_dm_vfx_mgr_token";
 
 json CreateLocationButton(string buttonName = "<empty>", int id = 0);
 json BindCurrentLocationButton(object oDM, json jContainer);
@@ -23,9 +26,10 @@ json GetNUIColorWithName(string name){
         return NuiColor(32, 222, 32, 255);
     }
     if("FIRE"== name) return NuiColor(255, 76, 36, 255);
-    if("EARTH"== name) return NuiColor(32, 222, 32, 255);
-    if("WATER"== name) return NuiColor(110, 255, 254, 255);
-    if("AIR"== name) return NuiColor(38, 71, 255, 255);
+    if("green"== name) return NuiColor(32, 222, 32, 255);
+    if("lightblue"== name) return NuiColor(110, 255, 254, 255);
+    if("darkblue"== name) return NuiColor(38, 71, 255, 255);
+    if("yellow"== name) return NuiColor(255, 255, 0, 255);
     return JsonNull();
 }
 
@@ -314,7 +318,9 @@ void PopDMPlaceableManager(object oDM){
     RefreshPlaceableContainer(oDM, nToken);
 }
 
+
 /*--------------------------------- DM Quest Manager ---------------------------------*/
+
 json GetQuestComboElements(){
     json jQuestCombo = JsonArray();
     json jQuestDefault = NuiComboEntry("Select a quest", 0);
@@ -592,4 +598,88 @@ void PopDMQuestManager(object oDM, object oPlayer){
 
     NuiSetBindWatch(oDM, nToken, "dm_quest_mgr_combo_value", TRUE);
     NuiSetUserData(oDM, nToken, JsonString(ObjectToString(oPlayer)));
+}
+
+
+/*--------------------------------- DM VFX Manager ---------------------------------*/
+
+//naive approach, looping through 2DA again. Maybe save json list of all toggles buttons and put it in bindUserData
+void RunSelectedEffects(object oDM, int nToken, location loc){
+
+    int i = 0;
+    string label = Get2DAString("3t-dm-vfx", "label", i);
+    
+    while(label != "" && i <100){
+        
+        json vfx = NuiGetBind(oDM, nToken, "button_vfx_toggle_"+IntToString(i));
+        int isOn = JsonGetInt(vfx);
+        if(isOn){
+            string vfx_code = Get2DAString("3t-dm-vfx", "vfx_code", i);
+            string vfx_duration = Get2DAString("3t-dm-vfx", "duration", i);
+            float duration = StringToFloat(vfx_duration);
+            if(duration > 0.0f){
+                ApplyEffectAtLocation(DURATION_TYPE_INSTANT, EffectVisualEffect(StringToInt(vfx_code)), loc, duration);
+            }
+            else{
+                ApplyEffectAtLocation(DURATION_TYPE_INSTANT, EffectVisualEffect(StringToInt(vfx_code)), loc);
+            }
+        }
+        i++;
+        label = Get2DAString("3t-dm-vfx", "label", i);
+    }
+}
+
+void PopDMVFXManager(object oDM){
+    float fWidth = 790.0f;
+    float fHeight = 510.0f;
+    
+    int nColumns = 4;
+
+    json jSelectorRow = JsonArray();
+    json targetButton = NuiButtonImage(JsonString("gui_mp_magicu"));
+    targetButton = NuiId(targetButton, "setTargetObject");
+    targetButton = NuiWidth(targetButton, 75.0f);
+    targetButton = NuiHeight(targetButton, 75.0f);
+    jSelectorRow = JsonArrayInsert(jSelectorRow, targetButton);
+    jSelectorRow = NuiRow(jSelectorRow);
+
+    // --- container
+    json jMatrix = JsonArray();
+
+    int i = 0;
+    
+    json jMatrixRow = JsonArray();
+    string label = Get2DAString("3t-dm-vfx", "label", i);
+    while(label != "" && i <100){
+        
+        string vfx_code_label = Get2DAString("3t-dm-vfx", "vfx_code_label", i);
+        string vfx_code = Get2DAString("3t-dm-vfx", "vfx_code", i);
+        string color = Get2DAString("3t-dm-vfx", "color", i);
+
+        json jButton = NuiId(NuiButtonSelect(JsonString(label), NuiBind("button_vfx_toggle_"+IntToString(i))), "button_vfx_"+IntToString(i));
+        jButton = NuiStyleForegroundColor(jButton, GetNUIColorWithName(color));
+        jButton = NuiTooltip(jButton, JsonString(label + " - " + vfx_code_label));
+        jButton = NuiWidth(jButton, 190.0f);
+        jButton = NuiHeight(jButton, 30.0f);
+        jMatrixRow = JsonArrayInsert(jMatrixRow, jButton);
+
+        if ((i + 1) % nColumns == 0)
+        {
+            jMatrixRow = NuiRow(jMatrixRow);
+            jMatrix = JsonArrayInsert(jMatrix, jMatrixRow);
+            jMatrixRow = JsonArray();
+        }
+        i++;
+
+        label = Get2DAString("3t-dm-vfx", "label", i);
+    }
+    // make NuiRows ---
+    jMatrix = NuiCol(jMatrix);
+
+    json jColGlobal = JsonArray();
+    jColGlobal = JsonArrayInsert(jColGlobal, jSelectorRow);
+    jColGlobal = JsonArrayInsert(jColGlobal, jMatrix);
+    json jLayoutGlobal = NuiCol (jColGlobal);
+    int nToken = SetWindow(oDM, jLayoutGlobal, DM_VFX_MGR_WINDOW, "DM VFX Manager", -1.0f, -1.0f, fWidth, fHeight, TRUE, TRUE, TRUE, TRUE, TRUE);
+    SetLocalInt(oDM, NUI_DM_VFX_MGR_TOKEN, nToken);
 }

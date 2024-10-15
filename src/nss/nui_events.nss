@@ -110,4 +110,20 @@ void main() {
         }
 
     }
+
+
+    if (sWindowId == DM_VFX_MGR_WINDOW){
+
+        if(GetStringLeft(sElement, 11) == "button_vfx_"){
+            string sVfxIndex = GetSubString(sElement, 11, GetStringLength(sElement) - 1);
+            int nVfxIndex = StringToInt(sVfxIndex);            
+            return;
+        }
+        else if(sElement == "setTargetObject"){
+
+            SetLocalInt(oPlayer, "TARGET_MODE_ID", TARGET_MODE_VFX_APPLY);
+            EnterTargetingMode(oPlayer, OBJECT_TYPE_ALL);
+            return;
+        }
+    }
 }

@@ -10,8 +10,10 @@ void main()
 
 
     SetEventScript(GetModule(), EVENT_SCRIPT_MODULE_ON_NUI_EVENT, "nui_events");
+    SetEventScript(GetModule(), EVENT_SCRIPT_MODULE_ON_PLAYER_TARGET, "targetscript");
 
     SetTlkOverride(111674, "DM Teleport tool");
     SetTlkOverride(111675, "DM Placeable Mgr tool");
     SetTlkOverride(111676, "DM Player Quest Mgr tool");
+    SetTlkOverride(111677, "DM VFX Mgr tool");
 }
