@@ -1,43 +1,43 @@
 2DA V2.0
 
 	label	vfx_code_label	vfx_code	color	duration
-0	"Bigby's Hand"	VFX_IMP_BIGBYS_FORCEFUL_HAND	315	green	10.0
-1	"Demon Hand"	VFX_FNF_DEMON_HAND	475	10.0
-2	"Explosion (Electric)"	VFX_FNF_ELECTRIC_EXPLOSION	459	darkblue
-3	"Explosion (Evil, large)"	VFX_FNF_LOS_EVIL_20	186	
-4	"Explosion (Holy, Large)"	VFX_FNF_LOS_HOLY_20	189	
-5	"Explosion (Mystical)"	VFX_FNF_MYSTICAL_EXPLOSION	477	yellow
-6	"Fireball"	VFX_FNF_FIREBALL	22	red
-7	Firestorm	VFX_FNF_FIRESTORM	23	red
-8	"Greater Ruin"	VFX_FNF_GREATER_RUIN	487	red
-9	Hellball	464	464	
-10	"Ice Storm"	VFX_FNF_ICESTORM	231	lightblue
-11	Implosion	VFX_FNF_IMPLOSION	24	
-12	"Meteor Swarm"	VFX_FNF_METEOR_SWARM	28	red
-13	"Nature's Balance"	VFX_FNF_NATURES_BALANCE	29	
-14	Polymorph	VFX_IMP_POLYMORPH	85	
-15	"Power Word (Kill)"	VFX_FNF_PWKILL	30	
-16	"Summon (Celestial)"	VFX_FNF_SUMMON_CELESTIAL	219	
-17	"Summon (Gate)"	VFX_FNF_SUMMON_GATE		
-18	"Summon (Monster)"	VFX_FNF_SUMMON_MONSTER_2		
-19	"Summon (Undead)"	VFX_FNF_SUMMON_EPIC_UNDEAD		
-20	Unsummon	VFX_IMP_UNSUMMON		
-21	"Wail of the Banshee"	VFX_FNF_WAIL_O_BANSHEES		
-22	Weird	VFX_FNF_WEIRD		
-23	Dominate	VFX_IMP_DOMINATE_S		
-24	Doom	VFX_IMP_DOOM		
-25	"Dragon Breath"	494	494	
-26	"Explosion (Acid)"	VFX_FNF_GAS_EXPLOSION_ACID		
-27	"Explosion (Evil)"	VFX_FNF_GAS_EXPLOSION_EVIL		
-28	"Explosion (Fire)"	VFX_FNF_GAS_EXPLOSION_FIRE		
-29	"Explosion (Gas)"	VFX_FNF_GAS_EXPLOSION_NATURE		
-30	"Explosion (Grease)"	VFX_FNF_GAS_EXPLOSION_GREASE		
-31	"Explosion (Mind)"	VFX_FNF_GAS_EXPLOSION_MIND		
-32	Harm	VFX_IMP_HARM		
-33	Heal	VFX_IMP_HEALING_L		
-34	Lightning	VFX_IMP_LIGHTNING_M		
-35	"Sound Burst"	VFX_FNF_SOUND_BURST		
-36	"Sound Burst" (Silent)	VFX_FNF_SOUND_BURST_SILENT		
-37	Stun	VFX_IMP_STUN		
-38	"Teleport (IN)"	471	471	
-39	"Teleport (OUT)"	472	472	
+0	"Bigby's Hand"	VFX_IMP_BIGBYS_FORCEFUL_HAND	315	green	0.0
+1	"Demon Hand"	VFX_FNF_DEMON_HAND	475		0.0
+2	"Explosion (Electric)"	VFX_FNF_ELECTRIC_EXPLOSION	459	darkblue	0.0
+3	"Explosion (Evil, large)"	VFX_FNF_LOS_EVIL_20	186		0.0
+4	"Explosion (Holy, Large)"	VFX_FNF_LOS_HOLY_20	189		0.0
+5	"Explosion (Mystical)"	VFX_FNF_MYSTICAL_EXPLOSION	477	yellow	0.0
+6	"Fireball"	VFX_FNF_FIREBALL	22	red	0.0
+7	"Firestorm"	VFX_FNF_FIRESTORM	23	red	0.0
+8	"Greater Ruin"	VFX_FNF_GREATER_RUIN	487	red	0.0
+9	"Hellball"	464	464		0.0
+10	"Ice Storm"	VFX_FNF_ICESTORM	231	lightblue	0.0
+11	"Implosion"	VFX_FNF_IMPLOSION	24		0.0
+12	"Meteor Swarm"	VFX_FNF_METEOR_SWARM	28	red	0.0
+13	"Nature's Balance"	VFX_FNF_NATURES_BALANCE	29		0.0
+14	"Polymorph"	VFX_IMP_POLYMORPH	85		0.0
+15	"Power Word (Kill)"	VFX_FNF_PWKILL	30		0.0
+16	"Summon (Celestial)"	VFX_FNF_SUMMON_CELESTIAL	219		0.0
+17	"Summon (Gate)"	VFX_FNF_SUMMON_GATE	32		0.0
+18	"Summon (Monster)"	VFX_FNF_SUMMON_MONSTER_2	34		0.0
+19	"Summon (Undead)"	VFX_FNF_SUMMON_EPIC_UNDEAD	496		0.0
+20	"Unsummon"	VFX_IMP_UNSUMMON	99		0.0
+21	"Wail of the Banshee"	VFX_FNF_WAIL_O_BANSHEES	39		0.0
+22	"Weird"	VFX_FNF_WEIRD	40		0.0
+23	"Dominate"	VFX_DUR_MIND_AFFECTING_DOMINATED	209		0.0
+24	"Doom"	VFX_IMP_DOOM	57		0.0
+25	"Dragon Breath"	494	494		0.0
+26	"Explosion (Acid)"	VFX_FNF_GAS_EXPLOSION_ACID	257		0.0
+27	"Explosion (Evil)"	VFX_FNF_GAS_EXPLOSION_EVIL	258		0.0
+28	"Explosion (Fire)"	VFX_FNF_GAS_EXPLOSION_FIRE	260		0.0
+29	"Explosion (Gas)"	VFX_FNF_GAS_EXPLOSION_NATURE	259		0.0
+30	"Explosion (Grease)"	VFX_FNF_GAS_EXPLOSION_GREASE	261		0.0
+31	"Explosion (Mind)"	VFX_FNF_GAS_EXPLOSION_MIND	262		0.0
+32	"Harm"	VFX_IMP_HARM	246		0.0
+33	"Heal"	VFX_IMP_HEALING_X	70		0.0
+34	"Lightning"	VFX_IMP_LIGHTNING_M	74		0.0
+35	"Sound Burst"	VFX_FNF_SOUND_BURST	183		0.0
+36	"Sound Burst (Silent)"	VFX_FNF_SOUND_BURST_SILENT	446		0.0
+37	"Stu"n	VFX_IMP_STUN	97		0.0
+38	"Teleport (IN)"	471	471		0.0
+39	"Teleport (OUT)"	472	472		0.0

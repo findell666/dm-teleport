@@ -654,10 +654,10 @@ void PopDMVFXManager(object oDM){
         
         string vfx_code_label = Get2DAString("3t-dm-vfx", "vfx_code_label", i);
         string vfx_code = Get2DAString("3t-dm-vfx", "vfx_code", i);
-        string color = Get2DAString("3t-dm-vfx", "color", i);
+        // string color = Get2DAString("3t-dm-vfx", "color", i);
 
         json jButton = NuiId(NuiButtonSelect(JsonString(label), NuiBind("button_vfx_toggle_"+IntToString(i))), "button_vfx_"+IntToString(i));
-        jButton = NuiStyleForegroundColor(jButton, GetNUIColorWithName(color));
+        // jButton = NuiStyleForegroundColor(jButton, GetNUIColorWithName(color));
         jButton = NuiTooltip(jButton, JsonString(label + " - " + vfx_code_label));
         jButton = NuiWidth(jButton, 190.0f);
         jButton = NuiHeight(jButton, 30.0f);
