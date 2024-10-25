@@ -1,4 +1,5 @@
 #include "i_x3_dm_tools"
+#include "nui_pm_summons"
 
 
 void ResetEncourageBinds(object oPC, int nToken){
@@ -125,5 +126,19 @@ void main() {
             EnterTargetingMode(oPlayer, OBJECT_TYPE_ALL);
             return;
         }
+    }
+
+    if (sWindowId == NUI_PM_SUMMONS_WINDOW){
+        if (sEvent != "mouseup" && sEvent != "watch"){
+            return;
+        }
+
+        if (sEvent == "watch" && GetStringLeft(sElement, 15) == "pm_summon_list_"){
+            PaleMasterSettingUpdateData(oPlayer, nToken);
+        }
+        else if(sElement == "pm_summons_close"){
+            NuiDestroy(oPlayer, nToken);
+        }
+        return;
     }
 }
