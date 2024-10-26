@@ -22,34 +22,38 @@ const string GIANT_ARCHER_DESC = "A towering skeletal behemoth armed with an eno
 //melee
 const string DEMONIC_NAMELESS_RACE = "Demonic Nameless Race";
 const string SPEARTHRONE_COLOSSUS = "Spearthrone Colossus";
-const string DEATH_SHADOW_DEVIL = "Death Shadow Devil";
+const string INFERNAL_STALKER = "Infernal Stalker";
 
 const string DEMONIC_NAMELESS_RACE_PORTRAIT = "po_hu_m_07_l";
 const string SPEARTHRONE_COLOSSUS_PORTRAIT = "po_sk_chief01_l";
-const string DEATH_SHADOW_DEVIL_PORTRAIT = "po_lichkmasked_l";
+const string INFERNAL_STALKER_PORTRAIT = "infernal_stalk_h";
 
 const string DEMONIC_NAMELESS_RACE_DESC = "Twisted by infernal magic and the souls of drow captives, these demonic horrors are enslaved to the priesthood's will. With glowing eyes and corrupted forms, they patrol the city as ruthless enforcers of dark power.";
 const string SPEARTHRONE_COLOSSUS_DESC = "An ancient skeletal giant armed with a massive spear and shield, bound by dark magic. Its towering frame and relentless strikes make it a fearsome guardian of the undead legions.";
-const string DEATH_SHADOW_DEVIL_DESC = "po_hu_m_07_l";
+const string INFERNAL_STALKER_DESC = "A red-skinned, horned goblin wielding twin light hammers, said to be a cousin of the Devil itself. It strikes swiftly from the shadows, leaving only a whiff of sulfur and a chilling, sinister laugh in its wake.";
 
 
-json GetAvailableSummons(string suffix){
+json GetAvailableSummons(string suffix, int nCasterLevel){
     json jCombo = JsonArray();
 
     string name1 ="";
     string name2 ="";
 
-    if("A"==suffix){
+    if("A"==suffix && nCasterLevel >= 24){
         name1 = GIANT_ARCHER;
         name2 = DEMONIC_NAMELESS_RACE;
     }
-    else if("B" == suffix){
+    else if("B" == suffix && nCasterLevel > 26){
         name1 = SPECTRAL_GRANDMASTER_ARCHER;
         name2 = SPEARTHRONE_COLOSSUS;
     }
-    else if("C" == suffix){
+    else if("C" == suffix && nCasterLevel > 29){
         name1 = DEATH_KNIGHT_MASTER;
-        name2 = DEATH_SHADOW_DEVIL;
+        name2 = INFERNAL_STALKER;
+    }
+
+    if(name1 == "" || name2 == ""){
+        return jCombo;
     }
 
     json jDefault = NuiComboEntry(name1, 0);
@@ -61,19 +65,36 @@ json GetAvailableSummons(string suffix){
     return jCombo;
 }
 
-json GetSummonSelectorColumn(string suffix){
+json GetSummonSelectorColumn(string suffix, int nCasterLevel){
     string abilityName = "";
     string description = "";
     string portrait;
 
-    if("A" == suffix){
-        abilityName = "Animate dead";
+    if("A" == suffix && (nCasterLevel >= 24 && nCasterLevel <=26)){
+        abilityName = "Summon greater undead";
     }
-    else if("B" == suffix){
+    else if("A" == suffix && (nCasterLevel >= 27 && nCasterLevel <=29)){
         abilityName = "Summon undead";
     }
-    else if("C" == suffix){
+    else if("A" == suffix && nCasterLevel > 29){
+        abilityName = "Animate dead";
+    }
+
+    if("B" == suffix && (nCasterLevel >= 27 && nCasterLevel <=29)){
+        abilityName = "Summon greater undead";        
+    }
+    else if("B" == suffix && nCasterLevel > 29){
+        abilityName = "Summon undead";
+    }
+    else if("B" == suffix){
+        abilityName = "Too low";
+    }
+
+    if("C" == suffix && nCasterLevel > 29){
         abilityName = "Summon greater undead";
+    }
+    else if("C" == suffix){
+        abilityName = "Too low";
     }
 
     json jColLeft = JsonArray();
@@ -86,7 +107,7 @@ json GetSummonSelectorColumn(string suffix){
     jColLeft = JsonArrayInsert(jColLeft, jAbility);    
 
     //combo
-    json jCombo = NuiCombo(GetAvailableSummons(suffix), NuiBind("pm_summon_list_"+suffix+"_value"));
+    json jCombo = NuiCombo(GetAvailableSummons(suffix, nCasterLevel), NuiBind("pm_summon_list_"+suffix+"_value"));
     jCombo = NuiId(jCombo, "pm_summon_"+suffix+"_combo");
     jCombo = NuiWidth(jCombo, 199.0f);
     jColLeft = JsonArrayInsert(jColLeft, jCombo);
@@ -129,42 +150,61 @@ void PaleMasterSettingUpdateData(object oPlayer, int nToken){
     json jC = NuiGetBind(oPlayer, nToken, "pm_summon_list_C_value");
     int valueC = JsonGetInt(jC);
 
-    
-    if(valueA == 0){
-        NuiSetBind(oPlayer, nToken, "portrait_A", JsonString(GIANT_ARCHER_PORTRAIT));
-        NuiSetBind(oPlayer, nToken, "description_A", JsonString(GIANT_ARCHER_DESC));
-    }
-    else{
-        NuiSetBind(oPlayer, nToken, "portrait_A", JsonString(DEMONIC_NAMELESS_RACE_PORTRAIT));
-        NuiSetBind(oPlayer, nToken, "description_A", JsonString(DEMONIC_NAMELESS_RACE_DESC));
+
+    int nCasterLevel = GetLevelByClass(CLASS_TYPE_PALEMASTER, oPlayer);    
+
+    if(nCasterLevel >=24){
+        if(valueA == 0){
+            NuiSetBind(oPlayer, nToken, "portrait_A", JsonString(GIANT_ARCHER_PORTRAIT));
+            NuiSetBind(oPlayer, nToken, "description_A", JsonString(GIANT_ARCHER_DESC));
+        }
+        else{
+            NuiSetBind(oPlayer, nToken, "portrait_A", JsonString(DEMONIC_NAMELESS_RACE_PORTRAIT));
+            NuiSetBind(oPlayer, nToken, "description_A", JsonString(DEMONIC_NAMELESS_RACE_DESC));
+        }
+    }else{
+        NuiSetBind(oPlayer, nToken, "portrait_A", JsonString("po_clspalemast_m"));
+        NuiSetBind(oPlayer, nToken, "description_A", JsonString("You are too low level to summon this creature"));
     }
 
-    
-    if(valueB == 0){
-        NuiSetBind(oPlayer, nToken, "portrait_B", JsonString(SPECTRAL_GRANDMASTER_ARCHER_PORTRAIT));
-        NuiSetBind(oPlayer, nToken, "description_B", JsonString(SPECTRAL_GRANDMASTER_ARCHER_DESC));
+    if(nCasterLevel >26){
+        if(valueB == 0){
+            NuiSetBind(oPlayer, nToken, "portrait_B", JsonString(SPECTRAL_GRANDMASTER_ARCHER_PORTRAIT));
+            NuiSetBind(oPlayer, nToken, "description_B", JsonString(SPECTRAL_GRANDMASTER_ARCHER_DESC));
+        }
+        else{
+            NuiSetBind(oPlayer, nToken, "portrait_B", JsonString(SPEARTHRONE_COLOSSUS_PORTRAIT));
+            NuiSetBind(oPlayer, nToken, "description_B", JsonString(SPEARTHRONE_COLOSSUS_DESC));
+        }
     }
     else{
-        NuiSetBind(oPlayer, nToken, "portrait_B", JsonString(SPEARTHRONE_COLOSSUS_PORTRAIT));
-        NuiSetBind(oPlayer, nToken, "description_B", JsonString(SPEARTHRONE_COLOSSUS_DESC));
+        NuiSetBind(oPlayer, nToken, "portrait_B", JsonString("po_clspalemast_m"));
+        NuiSetBind(oPlayer, nToken, "description_B", JsonString("You are too low level to summon this creature"));
     }
 
-    if(valueC == 0){
-        NuiSetBind(oPlayer, nToken, "portrait_C", JsonString(DEATH_KNIGHT_MASTER_PORTRAIT));
-        NuiSetBind(oPlayer, nToken, "description_C", JsonString(DEATH_KNIGHT_MASTER_DESC));
+    if(nCasterLevel >29){
+        if(valueC == 0){
+            NuiSetBind(oPlayer, nToken, "portrait_C", JsonString(DEATH_KNIGHT_MASTER_PORTRAIT));
+            NuiSetBind(oPlayer, nToken, "description_C", JsonString(DEATH_KNIGHT_MASTER_DESC));
+        }
+        else{
+            NuiSetBind(oPlayer, nToken, "portrait_C", JsonString(INFERNAL_STALKER_PORTRAIT));
+            NuiSetBind(oPlayer, nToken, "description_C", JsonString(INFERNAL_STALKER_DESC));
+        }
     }
     else{
-        NuiSetBind(oPlayer, nToken, "portrait_C", JsonString(DEATH_SHADOW_DEVIL_PORTRAIT));
-        NuiSetBind(oPlayer, nToken, "description_C", JsonString(DEATH_SHADOW_DEVIL_DESC));
+        NuiSetBind(oPlayer, nToken, "portrait_C", JsonString("po_clspalemast_m"));
+        NuiSetBind(oPlayer, nToken, "description_C", JsonString("You are too low level to summon this creature"));
     }
 
-    //set player setting here, with framework
-    // int valueA = GetLocalInt(oPlayer, "PM_SUMMON_LIST_A");
-    // int valueB = GetLocalInt(oPlayer, "PM_SUMMON_LIST_B");
-    // int valueC = GetLocalInt(oPlayer, "PM_SUMMON_LIST_C");
+    //TODO set player setting here, with framework
+    SetLocalInt(oPlayer, "PM_SUMMON_LIST_A", valueA);
+    SetLocalInt(oPlayer, "PM_SUMMON_LIST_B", valueB);
+    SetLocalInt(oPlayer, "PM_SUMMON_LIST_C", valueC);
 }
 
 void PopPaleMasterSummonChooser(object oPlayer){
+    int nCasterLevel = GetLevelByClass(CLASS_TYPE_PALEMASTER, oPlayer);
 
     float fWidth = 850.0f;
     float fHeight = 600.0;
@@ -175,7 +215,7 @@ void PopPaleMasterSummonChooser(object oPlayer){
 
     json jImage = NuiDrawListImage(
         JsonBool(TRUE),
-        JsonString("pm_bg_dalle2"),
+        JsonString("pm_summ_bg"),
         NuiRect(0.0, 0.0, fWidth, fHeight),
         JsonInt(NUI_ASPECT_STRETCH),
         JsonInt(NUI_HALIGN_CENTER),
@@ -186,9 +226,9 @@ void PopPaleMasterSummonChooser(object oPlayer){
     json jGroupImageRow = JsonArray();
     // jGroupImageRow = JsonArrayInsert(jGroupImageRow, jFirstText);
     jGroupImageRow = JsonArrayInsert(jGroupImageRow, NuiWidth(NuiSpacer(), 125.0f));
-    jGroupImageRow = JsonArrayInsert(jGroupImageRow, GetSummonSelectorColumn("A"));
-    jGroupImageRow = JsonArrayInsert(jGroupImageRow, GetSummonSelectorColumn("B"));
-    jGroupImageRow = JsonArrayInsert(jGroupImageRow, GetSummonSelectorColumn("C"));
+    jGroupImageRow = JsonArrayInsert(jGroupImageRow, GetSummonSelectorColumn("A", nCasterLevel));
+    jGroupImageRow = JsonArrayInsert(jGroupImageRow, GetSummonSelectorColumn("B", nCasterLevel));
+    jGroupImageRow = JsonArrayInsert(jGroupImageRow, GetSummonSelectorColumn("C", nCasterLevel));
     jGroupImageRow = JsonArrayInsert(jGroupImageRow, NuiWidth(NuiSpacer(), 125.0f));
 
 
@@ -198,7 +238,7 @@ void PopPaleMasterSummonChooser(object oPlayer){
         jButton = NuiTooltip (jButton, JsonString("Close"));
         jButton = NuiWidth (jButton, 30.0f);
         jButton = NuiHeight (jButton, 30.0f);
-        jContainerButton = JsonArrayInsert(jContainerButton, NuiWidth(NuiSpacer(), 820.0f));
+        jContainerButton = JsonArrayInsert(jContainerButton, NuiWidth(NuiSpacer(), 810.0f));
         jContainerButton = JsonArrayInsert(jContainerButton, jButton);
         jContainerButton = NuiRow(jContainerButton);
         jContainerButton = NuiHeight(jContainerButton, 35.0f);
